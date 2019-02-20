@@ -22,6 +22,7 @@ type Props = TabBarOptions & {
   panX: Animated.Value,
   layout: any,
   navigation: any,
+  showTab: any,
   renderIcon: (props: {
     route: any,
     focused: boolean,
@@ -44,6 +45,15 @@ export default class TabBarTop extends React.PureComponent<Props> {
     allowFontScaling: true,
   };
 
+  _filterShownTabs = routes => {
+    return routes.filter(route => this._showTab(route));
+  };
+
+  _showTab = scene => {
+    if (this.props.showTab(scene) === false) return false;
+    return true;
+  };
+
   _renderLabel = ({ route }) => {
     const {
       position,
@@ -61,11 +71,12 @@ export default class TabBarTop extends React.PureComponent<Props> {
     }
 
     const { routes } = navigation.state;
-    const index = routes.indexOf(route);
+    const filteredRoutes = this._filterShownTabs(routes);
+    const index = filteredRoutes.indexOf(route);
     const focused = index === navigation.state.index;
 
     // Prepend '-1', so there are always at least 2 items in inputRange
-    const inputRange = [-1, ...routes.map((x, i) => i)];
+    const inputRange = [-1, ...filteredRoutes.map((x, i) => i)];
     const outputRange = inputRange.map(
       inputIndex => (inputIndex === index ? activeTintColor : inactiveTintColor)
     );
@@ -108,11 +119,17 @@ export default class TabBarTop extends React.PureComponent<Props> {
     if (showIcon === false) {
       return null;
     }
-
-    const index = navigation.state.routes.indexOf(route);
+    const filteredRoutes = this._filterShownTabs(navigation.state.routes);
+    // Visible screens have to be firsts for this to work
+    const index = filteredRoutes.indexOf(route);
+    const needsFix = navigation.state.index >= filteredRoutes.length;
+    const fixOpacity = (opacity, fallback) => {
+      return needsFix ? fallback : opacity;
+    };
+    const fixedActiveColor = needsFix ? inactiveTintColor : activeTintColor;
 
     // Prepend '-1', so there are always at least 2 items in inputRange
-    const inputRange = [-1, ...navigation.state.routes.map((x, i) => i)];
+    const inputRange = [-1, ...filteredRoutes.map((x, i) => i)];
     const activeOpacity = position.interpolate({
       inputRange,
       outputRange: inputRange.map(i => (i === index ? 1 : 0)),
@@ -126,9 +143,9 @@ export default class TabBarTop extends React.PureComponent<Props> {
       <CrossFadeIcon
         route={route}
         navigation={navigation}
-        activeOpacity={activeOpacity}
-        inactiveOpacity={inactiveOpacity}
-        activeTintColor={activeTintColor}
+        activeOpacity={fixOpacity(activeOpacity, 0)}
+        inactiveOpacity={fixOpacity(inactiveOpacity, 1)}
+        activeTintColor={fixedActiveColor}
         inactiveTintColor={inactiveTintColor}
         renderIcon={renderIcon}
         style={[styles.icon, iconStyle]}

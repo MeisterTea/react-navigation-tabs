@@ -108,6 +108,7 @@ class MaterialTabView extends React.PureComponent<Props, State> {
         getLabelText={this.props.getLabelText}
         getAccessibilityLabel={this.props.getAccessibilityLabel}
         getTestID={this.props.getTestID}
+        showTab={this._showTab}
         renderIcon={this._renderIcon}
         onTabPress={this.props.onTabPress}
         onTabLongPress={this.props.onTabLongPress}
@@ -182,6 +183,15 @@ class MaterialTabView extends React.PureComponent<Props, State> {
     return focused;
   };
 
+  _showTab = route => {
+    const { descriptors } = this.props;
+    const descriptor = descriptors[route.key];
+    const options = descriptor.options;
+    let { showTab } = options;
+    showTab = showTab === false ? showTab : true;
+    return showTab;
+  };
+
   _renderScene = ({ route }) => {
     const { renderScene, descriptors, lazy, optimizationsEnabled } = this.props;
 
@@ -254,6 +264,7 @@ class MaterialTabView extends React.PureComponent<Props, State> {
         onIndexChange={this._handleIndexChange}
         onSwipeStart={this._handleSwipeStart}
         renderPager={renderPager}
+        showTab={this._showTab}
         renderTabBar={this._renderTabBar}
         renderScene={
           /* $FlowFixMe */
